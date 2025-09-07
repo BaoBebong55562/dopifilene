@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Order Cafe - 17 bàn</title>
+  <style>
+    :root{
+      --bg:#faf6ef; --accent:#d2691e; --muted:#6b6b6b;
+      --card:#fff; --success:#2b8a3e; --info:#1e90ff; --danger:#d9534f;
+      --note-bg:#fffaf0;
+    }
+    *{box-sizing:border-box;font-family:Inter,Segoe UI,Helvetica,Arial;}
+    body{margin:0;background:linear-gradient(180deg,#fbf7f3 0%,#f3eee8 100%);color:#222}
+    header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid #eee;background:var(--card)}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:56px;height:56px;border-radius:8px;background:linear-gradient(135deg,#ffcf9a,#f6b27f);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
+    h1{font-size:18px;margin:0}
+    .top-stats{font-size:14px;color:var(--muted)}
+    .container{display:grid;grid-template-columns:320px 1fr 420px;gap:16px;padding:16px;align-items:start}
+    /* left menu */
+    .menu-card{background:var(--card);padding:12px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.04);height:calc(100vh - 120px);overflow:auto}
+    .search{display:flex;gap:8px;margin-bottom:8px}
+    .search input{flex:1;padding:8px;border:1px solid #eee;border-radius:6px}
+    .cat-list{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+    .cat-item{padding:6px 8px;border-radius:6px;background:#fff;border:1px solid #eee;cursor:pointer}
+    .cat-item.active{background:var(--accent);color:#fff;border-color:transparent}
+    .item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:6px;margin-bottom:6px;background:#fff;border:1px solid #f0f0f0}
+    .item .meta{display:flex;flex-direction:column}
+    .item button{padding:6px 8px;border-radius:6px;border:0;background:var(--accent);color:#fff;cursor:pointer}
+    /* center tables */
+    .tables{background:var(--card);padding:12px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.04)}
+    .tables-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+    .table-btn{padding:12px;border-radius:8px;background:#fff;border:1px solid #eee;cursor:pointer;text-align:center;position:relative;min-height:64px}
+    .table-btn.selected{background:linear-gradient(180deg,#ffefe0,#fff);border:1px solid #f0a86b;box-shadow:0 6px 18px rgba(240,150,80,0.08)}
+    .table-status{font-size:12px;color:var(--muted);margin-top:6px}
+    .note-badge{position:absolute;right:8px;top:8px;background:#fffae6;border:1px solid #f0a86b;color:#b36b00;padding:4px 6px;border-radius:6px;font-size:12px;display:flex;align-items:center;gap:6px}
+    /* right order panel */
+    .order-card{background:var(--card);padding:12px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.04);height:calc(100vh - 120px);overflow:auto}
+    .order-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .order-list{margin-top:8px}
+    .order-row{display:flex;gap:8px;align-items:center;padding:8px;border-radius:6px;background:#fbfbfb;border:1px solid #f0f0f0;margin-bottom:6px}
+    .order-row .qty{width:34px;height:34px;border-radius:6px;background:#fff;border:1px solid #eee;display:flex;align-items:center;justify-content:center;font-weight:600}
+    .order-row .name{flex:1}
+    .order-row .price{width:120px;text-align:right;font-weight:700}
+    .order-actions{display:flex;gap:8px;margin-top:8px}
+    .btn{padding:8px 10px;border-radius:6px;border:0;cursor:pointer}
+    .btn.ghost{background:#fff;border:1px solid #ddd}
+    .btn.primary{background:var(--accent);color:#fff}
+    .btn.danger{background:var(--danger);color:#fff}
+    .small{font-size:13px;color:var(--muted)}
+    .footer{margin-top:12px;border-top:1px dashed #eee;padding-top:8px;display:flex;justify-content:space-between;align-items:center}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:2200}
+    .modal .box{background:#fff;padding:16px;border-radius:8px;width:560px;max-width:95%}
+    label{display:block;font-size:13px;margin-top:8px}
+    input[type="text"],input[type="number"],select,textarea{width:100%;padding:8px;border:1px solid #eee;border-radius:6px}
+    textarea{min-height:80px}
+    .history-item{padding:8px;border-radius:6px;background:#fff;border:1px solid #f0f0f0;margin-bottom:6px}
+    .menu-image{width:100%;border-radius:6px;margin-bottom:8px}
+    /* note box styling */
+    .note-box{background:var(--note-bg);border:1px solid #fde3c9;padding:12px;border-radius:8px;box-shadow:0 6px 18px rgba(240,150,80,0.06);display:flex;gap:12px;align-items:flex-start;width:100%}
+    .note-box textarea{flex:1;min-height:120px;border-radius:8px;padding:10px;font-size:14px;border:1px solid #ffe6cc;background:transparent;resize:vertical}
+    .note-controls{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+    .note-meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+    .note-saved{font-size:13px;padding:6px 8px;border-radius:16px;background:rgba(43,138,62,0.12);color:var(--success);display:inline-flex;align-items:center;gap:6px}
+    .note-char{font-size:12px;color:var(--muted)}
+    /* banner container */
+    .banner-container{position:fixed;left:50%;transform:translateX(-50%);top:72px;z-index:2100;display:flex;flex-direction:column;gap:8px;width:clamp(320px,56%,820px);pointer-events:none}
+    .banner{pointer-events:auto;padding:12px 14px;border-radius:8px;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,0.12);display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .banner .msg{flex:1}
+    .banner .close-btn{background:transparent;border:0;color:rgba(255,255,255,0.9);cursor:pointer;font-weight:700;padding:6px}
+    .banner.success{background:linear-gradient(90deg,var(--success),#2f9e4b)}
+    .banner.info{background:linear-gradient(90deg,var(--info),#2f86ff)}
+    .banner.error{background:linear-gradient(90deg,var(--danger),#d4433f)}
+    /* responsive */
+    @media (max-width:1100px){.container{grid-template-columns:1fr;} .banner-container{top:64px;width:92%;}}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">CF</div>
+    <div>
+      <h1>App Oder</h1>
+      <div class="top-stats small">Lưu trạng thái: <strong id="storageState">ON</strong></div>
+    </div>
+  </div>
+  <div class="top-stats">
+    Tổng doanh thu: <strong id="totalRevenue">0</strong> &nbsp; • &nbsp;
+    Bàn đang chọn: <strong id="currentTableLabel">—</strong>
+  </div>
+</header>
+
+<!-- banner container (for on-screen notifications) -->
+<div class="banner-container" id="bannerContainer" aria-live="polite"></div>
+
+<div class="container">
+  <!-- left: menu -->
+  <div class="menu-card">
+    <div class="search">
+      <input id="searchMenu" placeholder="Tìm món..." />
+      <button class="btn ghost" id="openAddItem">+ Thêm món</button>
+    </div>
+    <div class="cat-list" id="catList"></div>
+    <div id="menuItems"></div>
+  </div>
+
+  <!-- center: tables -->
+  <div class="tables">
+    <h3 style="margin:0 0 8px 0">Sơ đồ bàn (17 bàn)</h3>
+    <div class="tables-grid" id="tablesGrid"></div>
+    <div style="margin-top:12px" class="small">Ghi chú: Giá hiển thị là **VND** (ví dụ 25 => <strong>25.000 đ</strong>)</div>
+  </div>
+
+  <!-- right: order / details -->
+  <div class="order-card">
+    <div class="order-header">
+      <div>
+        <h3 style="margin:0">Chi tiết bàn</h3>
+        <div class="small" id="tableInfo">Chọn bàn để bắt đầu order</div>
+      </div>
+      <div>
+        <button class="btn ghost" id="toggleStorage">Tắt lưu</button>
+        <button class="btn ghost" id="openManageMenu">Quản lý menu</button>
+      </div>
+    </div>
+
+    <div id="orderPanel" style="display:none">
+      <div class="small">Order hiện tại</div>
+      <div class="order-list" id="orderList"></div>
+
+      <div class="order-actions">
+        <button class="btn primary" id="checkoutBtn">Thanh toán (Checkout)</button>
+        <button class="btn ghost" id="clearOrderBtn">Xóa order hiện tại</button>
+        <button class="btn ghost" id="viewHistoryBtn">Lịch sử bàn</button>
+      </div>
+
+      <div class="footer">
+        <div>
+          Tổng đơn: <strong id="tableTotal">0</strong>
+        </div>
+        <div>
+          <button class="btn ghost" id="addCustomToTable">+ Thêm món tuỳ ý</button>
+        </div>
+      </div>
+
+      <hr />
+      <h4 style="margin:10px 0 6px 0">Ghi chú bàn</h4>
+
+      <!-- improved note box -->
+      <div class="note-box">
+        <textarea id="tableNote" placeholder="Nhập ghi chú cho bàn (ví dụ: ít đường, không đá, đặt trước ...)" maxlength="500"></textarea>
+        <div class="note-controls">
+          <div class="note-meta">
+            <div id="noteSavedIndicator" style="display:none" class="note-saved">✓ Đã lưu</div>
+            <div id="noteCharCount" class="note-char">0 ký tự</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn primary" id="saveNoteBtn">Lưu ghi chú</button>
+            <button class="btn ghost" id="clearNoteBtn">Xóa ghi chú</button>
+          </div>
+        </div>
+      </div>
+
+      <hr />
+      <h4 style="margin:10px 0 6px 0">Lịch sử (gần nhất)</h4>
+      <div id="recentHistory"></div>
+    </div>
+
+    <div id="noTableSelected" style="color:var(--muted);">Chưa có bàn nào được chọn.</div>
+
+  </div>
+</div>
+
+<!-- modal templates -->
+<div id="modalRoot"></div>
+
+<script>
+/*
+  File: Single-file order app (updated)
+  - UI: improved note box
+  - Notifications: on-screen banners (replaces alert(...) calls)
+*/
+
+// ======== Dữ liệu khởi tạo menu (đã chuyển từ ảnh) ========
+function genId(){ return 'id_'+Math.random().toString(36).slice(2,9); }
+
+const DEFAULT_MENU = [
+  // (same as before)...
+  {id:genId(),name:'Cà Phê Đá (M)',category:'Cà Phê Nguyên Chất',price:25},
+  {id:genId(),name:'Cà Phê Đá (L)',category:'Cà Phê Nguyên Chất',price:33},
+  {id:genId(),name:'Cà Phê Sữa (M)',category:'Cà Phê Nguyên Chất',price:27},
+  {id:genId(),name:'Cà Phê Sữa (L)',category:'Cà Phê Nguyên Chất',price:35},
+  {id:genId(),name:'Bạc Xỉu (M)',category:'Cà Phê Nguyên Chất',price:30},
+  {id:genId(),name:'Bạc Xỉu (L)',category:'Cà Phê Nguyên Chất',price:38},
+  {id:genId(),name:'Cà Phê Muối (M)',category:'Cà Phê Nguyên Chất',price:32},
+  {id:genId(),name:'Cà Phê Muối (L)',category:'Cà Phê Nguyên Chất',price:40},
+  {id:genId(),name:'Sữa Tươi Cà Phê (M)',category:'Cà Phê Nguyên Chất',price:32},
+  {id:genId(),name:'Sữa Tươi Cà Phê (L)',category:'Cà Phê Nguyên Chất',price:40},
+  {id:genId(),name:'Cacao Sữa (M)',category:'Cà Phê Nguyên Chất',price:35},
+  {id:genId(),name:'Cacao Sữa (L)',category:'Cà Phê Nguyên Chất',price:40},
+  {id:genId(),name:'Yaourt Đá',category:'Yaourt',price:30},
+  {id:genId(),name:'Yaourt Việt Quất',category:'Yaourt',price:35},
+  {id:genId(),name:'Yaourt Chanh Dây',category:'Yaourt',price:35},
+  {id:genId(),name:'Yaourt Cà Phê',category:'Yaourt',price:35},
+  {id:genId(),name:'Soda Chanh',category:'Soda',price:35},
+  {id:genId(),name:'Soda Việt Quất',category:'Soda',price:35},
+  {id:genId(),name:'Matcha Sữa',category:'Matcha',price:35},
+  {id:genId(),name:'Matcha Trà Sữa',category:'Matcha',price:35},
+  {id:genId(),name:'Matcha Đậu Đỏ',category:'Matcha',price:35},
+  {id:genId(),name:'Trà Lipton',category:'Trà',price:30},
+  {id:genId(),name:'Trà Gừng',category:'Trà',price:30},
+  {id:genId(),name:'Trà Gừng Mật Ong',category:'Trà',price:35},
+  {id:genId(),name:'Trà Chanh Truyền Thống',category:'Trà',price:30},
+  {id:genId(),name:'Trà Chanh Hoàng Kim',category:'Trà',price:35},
+  {id:genId(),name:'Trà Đào',category:'Trà',price:35},
+  {id:genId(),name:'Trà Đào Sữa',category:'Trà',price:38},
+  {id:genId(),name:'Trà Vải',category:'Trà',price:35},
+  {id:genId(),name:'Trà Dâu',category:'Trà',price:35},
+  {id:genId(),name:'Trà Ổi',category:'Trà',price:35},
+  {id:genId(),name:'Trà Xanh Dưa Lưới',category:'Trà',price:35},
+  {id:genId(),name:'Trà Kiwi Dưa Lưới',category:'Trà',price:35},
+  {id:genId(),name:'Trà Kiwi Táo Xanh',category:'Trà',price:35},
+  {id:genId(),name:'Nước Chanh Đá - Nóng',category:'Nước Trái Cây',price:30},
+  {id:genId(),name:'Nước Chanh Mật Ong',category:'Nước Trái Cây',price:35},
+  {id:genId(),name:'Nước Chanh Muối',category:'Nước Trái Cây',price:30},
+  {id:genId(),name:'Nước Cam Vắt',category:'Nước Trái Cây',price:32},
+  {id:genId(),name:'Nước Cam Vắt Mật Ong',category:'Nước Trái Cây',price:35},
+  {id:genId(),name:'Nước Chanh Dây',category:'Nước Trái Cây',price:30},
+  {id:genId(),name:'Nước Ép Ổi',category:'Nước Ép',price:32},
+  {id:genId(),name:'Nước Ép Thơm',category:'Nước Ép',price:32},
+  {id:genId(),name:'Nước Ép Dưa Hấu',category:'Nước Ép',price:32},
+  {id:genId(),name:'Nước Ép Cà Rốt',category:'Nước Ép',price:32},
+  {id:genId(),name:'Nước Ép Táo',category:'Nước Ép',price:35},
+  {id:genId(),name:'Nước Ép Mix 2 Loại',category:'Nước Ép',price:35},
+  {id:genId(),name:'Nước Ngọt Các Loại',category:'Nước Ngọt',price:25},
+  {id:genId(),name:'Bò Húc Thái',category:'Nước Ngọt',price:27},
+  {id:genId(),name:'Nước Suối',category:'Nước Ngọt',price:20}
+];
+
+// ======= Utils & storage keys =======
+const STORAGE_KEY = 'cafe_order_app_v1';
+function saveState(state){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
+function loadState(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)); }catch(e){return null} }
+
+// Format: price is stored as number in "nghìn" (e.g., 25 = 25.000 VND).
+// fmtVND converts that to full VND with thousands separator and " đ".
+function fmtVND(n){
+  const num = Number(n) || 0;
+  const vnd = Math.round(num * 1000); // convert nghìn -> VND
+  return vnd.toLocaleString('vi-VN') + ' đ';
+}
+function fmtNumber(n){ return Number(n).toLocaleString('vi-VN'); }
+
+// ======= App state =======
+let state = loadState() || {
+  menu: DEFAULT_MENU.slice(),
+  categories: [],
+  tables: [], // will be 17 tables
+  totalRevenue: 0, // stored in "nghìn"
+  storageEnabled: true
+};
+
+function rebuildCategories(){
+  const cats = Array.from(new Set(state.menu.map(i=>i.category)));
+  state.categories = cats;
+}
+
+// init tables if empty
+if(!state.tables || state.tables.length !== 17){
+  state.tables = Array.from({length:17},(_,i)=>({
+    id: i+1, // số bàn
+    currentOrder: [], // mỗi item: {menuId,name,price,qty}
+    history: [], // mỗi entry: {timestamp, items, total}
+    note: '' // ghi chú cho bàn (string)
+  }));
+}
+
+// ensure each table has note property (migrate older state)
+state.tables.forEach(t=>{ if(typeof t.note === 'undefined') t.note = ''; });
+
+// ensure categories
+rebuildCategories();
+saveState(state);
+
+// ======= DOM refs =======
+const catListEl = document.getElementById('catList');
+const menuItemsEl = document.getElementById('menuItems');
+const tablesGridEl = document.getElementById('tablesGrid');
+const orderPanel = document.getElementById('orderPanel');
+const noTableSelected = document.getElementById('noTableSelected');
+const tableInfoEl = document.getElementById('tableInfo');
+const currentTableLabel = document.getElementById('currentTableLabel');
+const totalRevenueEl = document.getElementById('totalRevenue');
+const storageStateEl = document.getElementById('storageState');
+const toggleStorageBtn = document.getElementById('toggleStorage');
+const searchInput = document.getElementById('searchMenu');
+const modalRoot = document.getElementById('modalRoot');
+const openAddItemBtn = document.getElementById('openAddItem');
+const openManageMenuBtn = document.getElementById('openManageMenu');
+const orderListEl = document.getElementById('orderList');
+const tableTotalEl = document.getElementById('tableTotal');
+const checkoutBtn = document.getElementById('checkoutBtn');
+const clearOrderBtn = document.getElementById('clearOrderBtn');
+const viewHistoryBtn = document.getElementById('viewHistoryBtn');
+const recentHistoryEl = document.getElementById('recentHistory');
+const addCustomToTableBtn = document.getElementById('addCustomToTable');
+const tableNoteEl = document.getElementById('tableNote');
+const saveNoteBtn = document.getElementById('saveNoteBtn');
+const clearNoteBtn = document.getElementById('clearNoteBtn');
+const noteSavedIndicator = document.getElementById('noteSavedIndicator');
+const noteCharCount = document.getElementById('noteCharCount');
+const bannerContainer = document.getElementById('bannerContainer');
+
+// selected table id
+let selectedTableId = null;
+let activeCategory = null;
+let menuFilter = '';
+
+// ======= Banner system (on-screen notifications) =======
+let bannerIdCounter = 0;
+function showBanner(type, message, opts = {}) {
+  // type: 'success' | 'info' | 'error'
+  const id = 'bn_' + (++bannerIdCounter);
+  const el = document.createElement('div');
+  el.className = 'banner ' + (type||'info');
+  el.id = id;
+  el.innerHTML = `<div class="msg">${message}</div><button class="close-btn" aria-label="Đóng">✕</button>`;
+  const closeBtn = el.querySelector('.close-btn');
+  closeBtn.onclick = ()=> { if(el.parentNode) el.parentNode.removeChild(el); };
+  bannerContainer.appendChild(el);
+  const timeout = opts.timeout || 4200;
+  if(timeout > 0){
+    setTimeout(()=>{ if(el.parentNode) el.parentNode.removeChild(el); }, timeout);
+  }
+  return id;
+}
+
+// helper small wrappers
+function info(msg, opts){ return showBanner('info', msg, opts); }
+function success(msg, opts){ return showBanner('success', msg, opts); }
+function error(msg, opts){ return showBanner('error', msg, opts); }
+
+// ======= Render functions =======
+function renderCategories(){
+  rebuildCategories();
+  catListEl.innerHTML = '';
+  const allBtn = document.createElement('div');
+  allBtn.className = 'cat-item' + (activeCategory===null ? ' active':'');
+  allBtn.textContent = 'Tất cả';
+  allBtn.onclick = ()=>{ activeCategory = null; renderMenu(); renderCategories(); };
+  catListEl.appendChild(allBtn);
+  state.categories.forEach(cat=>{
+    const d = document.createElement('div');
+    d.className = 'cat-item' + (activeCategory===cat ? ' active' : '');
+    d.textContent = cat;
+    d.onclick = ()=>{ activeCategory = cat; renderMenu(); renderCategories(); };
+    catListEl.appendChild(d);
+  });
+}
+
+function renderMenu(){
+  const q = (menuFilter||'').trim().toLowerCase();
+  const items = state.menu.filter(it=>{
+    if(activeCategory && it.category !== activeCategory) return false;
+    if(q && !(`${it.name} ${it.category}`.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  menuItemsEl.innerHTML = '';
+  items.forEach(it=>{
+    const node = document.createElement('div');
+    node.className = 'item';
+    node.innerHTML = `<div class="meta"><div style="font-weight:600">${it.name}</div><div class="small">${it.category}</div></div>
+                      <div style="text-align:right"><div style="font-weight:700">${fmtVND(it.price)}</div><div style="margin-top:6px"><button class="addBtn">+ Order</button></div></div>`;
+    node.querySelector('.addBtn').onclick = ()=>{
+      if(!selectedTableId){ info('Vui lòng chọn bàn trước khi order.'); return; }
+      const qtyPrompt = prompt('Số lượng?', '1');
+      if(qtyPrompt === null) return; // user cancelled
+      const qty = parseInt(qtyPrompt) || 1;
+      addItemToTable(selectedTableId, it, qty);
+      success(`Đã thêm ${qty} x ${it.name} vào Bàn ${selectedTableId}`);
+    };
+    menuItemsEl.appendChild(node);
+  });
+}
+
+function renderTables(){
+  tablesGridEl.innerHTML = '';
+  state.tables.forEach(tb=>{
+    const btn = document.createElement('div');
+    btn.className = 'table-btn' + (selectedTableId===tb.id ? ' selected':'');
+    // build inner html including note badge
+    let noteBadge = '';
+    if(tb.note && tb.note.trim().length>0){
+      const short = tb.note.length>20 ? tb.note.slice(0,20)+'…' : tb.note;
+      noteBadge = `<div class="note-badge" title="${escapeHtml(tb.note)}">📝 ${escapeHtml(short)}</div>`;
+    }
+    btn.innerHTML = `${noteBadge}<div style="font-weight:700">Bàn ${tb.id}</div>
+                     <div class="table-status">${tb.currentOrder.length} món • ${fmtVND(calcOrderTotal(tb.currentOrder))}</div>`;
+    btn.onclick = ()=>{
+      selectedTableId = tb.id;
+      renderAll();
+      // focus note area
+      setTimeout(()=>{ tableNoteEl.focus(); }, 30);
+    };
+    tablesGridEl.appendChild(btn);
+  });
+}
+
+function renderOrderPanel(){
+  if(selectedTableId===null){ orderPanel.style.display='none'; noTableSelected.style.display='block'; currentTableLabel.textContent='—'; return; }
+  orderPanel.style.display='block'; noTableSelected.style.display='none';
+  const tb = state.tables.find(t=>t.id===selectedTableId);
+  currentTableLabel.textContent = 'Bàn ' + selectedTableId;
+  tableInfoEl.textContent = `Bàn ${selectedTableId} • ${tb.currentOrder.length} món hiện có.`;
+  // render order list
+  orderListEl.innerHTML = '';
+  tb.currentOrder.forEach((it, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'order-row';
+    row.innerHTML = `<div class="qty">${it.qty}</div>
+                     <div class="name">${it.name}</div>
+                     <div class="price">${fmtVND(it.price * it.qty)}</div>
+                     <div style="display:flex;gap:6px">
+                       <button class="btn ghost btn-dec">-</button>
+                       <button class="btn ghost btn-inc">+</button>
+                       <button class="btn danger btn-del">Xóa</button>
+                     </div>`;
+    row.querySelector('.btn-inc').onclick = ()=>{
+      it.qty++; saveAndRender();
+    };
+    row.querySelector('.btn-dec').onclick = ()=>{
+      if(it.qty>1){ it.qty--; saveAndRender(); } else { if(confirm('Xóa món này?')){ tb.currentOrder.splice(idx,1); saveAndRender(); } }
+    };
+    row.querySelector('.btn-del').onclick = ()=>{
+      if(confirm('Xóa món?')){ tb.currentOrder.splice(idx,1); saveAndRender(); success('Món đã được xóa.'); }
+    };
+    orderListEl.appendChild(row);
+  });
+  tableTotalEl.textContent = fmtVND(calcOrderTotal(tb.currentOrder));
+  renderRecentHistory(tb);
+  // load note for this table
+  tableNoteEl.value = tb.note || '';
+  updateNoteMeta();
+}
+
+function renderRecentHistory(tb){
+  recentHistoryEl.innerHTML = '';
+  const last = tb.history.slice(-5).reverse();
+  if(last.length===0){ recentHistoryEl.innerHTML = '<div class="small">Chưa có lịch sử thanh toán.</div>'; return; }
+  last.forEach(h=>{
+    const el = document.createElement('div');
+    el.className = 'history-item';
+    const date = new Date(h.timestamp).toLocaleString();
+    el.innerHTML = `<div style="font-weight:700">${fmtVND(h.total)}</div>
+                    <div class="small">${date}</div>
+                    <div style="margin-top:6px" class="small">${h.items.map(i=> `${i.qty}x ${escapeHtml(i.name)}`).join(' • ')}</div>`;
+    recentHistoryEl.appendChild(el);
+  });
+}
+
+function renderTotalRevenue(){
+  totalRevenueEl.textContent = fmtVND(state.totalRevenue);
+  storageStateEl.textContent = state.storageEnabled ? 'ON' : 'OFF';
+  toggleStorageBtn.textContent = state.storageEnabled ? 'Tắt lưu' : 'Bật lưu';
+}
+
+function renderAll(){
+  renderCategories();
+  renderMenu();
+  renderTables();
+  renderOrderPanel();
+  renderTotalRevenue();
+}
+
+// ======= Helpers =======
+function escapeHtml(str){
+  if(!str) return '';
+  return String(str).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; });
+}
+
+// ======= Actions =======
+function addItemToTable(tableId, menuItem, qty=1){
+  const tb = state.tables.find(t=>t.id===tableId);
+  if(!tb) return;
+  // merge if same menuId exists
+  const existing = tb.currentOrder.find(x => x.menuId === menuItem.id);
+  if(existing){ existing.qty += qty; }
+  else tb.currentOrder.push({menuId: menuItem.id, name: menuItem.name, price: menuItem.price, qty: qty});
+  saveAndRender();
+}
+
+function addCustomItemToTable(tableId, name, price, qty=1){
+  const tb = state.tables.find(t=>t.id===tableId);
+  tb.currentOrder.push({menuId: null, name: name, price: Number(price), qty: qty});
+  saveAndRender();
+  success(`Đã thêm ${qty} x ${name} vào Bàn ${tableId}`);
+}
+
+function calcOrderTotal(order){
+  // price stored in "nghìn", so sum is also in "nghìn"
+  return order.reduce((s,i)=>s + (Number(i.price) * Number(i.qty)), 0);
+}
+
+function checkoutTable(tableId){
+  const tb = state.tables.find(t=>t.id===tableId);
+  if(!tb || tb.currentOrder.length===0){ info('Không có món để thanh toán.'); return; }
+  const total = calcOrderTotal(tb.currentOrder);
+  if(!confirm(`Thanh toán bàn ${tableId} - tổng ${fmtVND(total)}?`)) return;
+  // push to history
+  tb.history.push({timestamp:Date.now(), items: tb.currentOrder.map(i=>({...i})), total: total});
+  state.totalRevenue += total; // total in "nghìn"
+  // clear current order
+  tb.currentOrder = [];
+  saveAndRender();
+  success(`Thanh toán thành công Bàn ${tableId} • ${fmtVND(total)}`);
+}
+
+function clearCurrentOrder(tableId){
+  const tb = state.tables.find(t=>t.id===tableId);
+  if(!tb) return;
+  if(confirm('Xác nhận xóa order hiện tại?')){ tb.currentOrder = []; saveAndRender(); success('Đã xóa order hiện tại.'); }
+}
+
+// Manage menu: add category or item
+function openAddItemModal(prefillCategory){
+  modalRoot.innerHTML = '';
+  const modal = document.createElement('div'); modal.className='modal';
+  modal.innerHTML = `<div class="box">
+    <h3>Thêm món mới</h3>
+    <label>Tên món <input id="newName" /></label>
+    <label>Danh mục <input id="newCategory" /></label>
+    <label>Giá (nghìn) <input id="newPrice" type="number" min="0" /></label>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button class="btn ghost" id="cancelBtn">Huỷ</button>
+      <button class="btn primary" id="saveBtn">Lưu món</button>
+    </div>
+  </div>`;
+  modalRoot.appendChild(modal);
+  if(prefillCategory) modal.querySelector('#newCategory').value = prefillCategory;
+  modal.querySelector('#cancelBtn').onclick = ()=>{ modalRoot.innerHTML=''; };
+  modal.querySelector('#saveBtn').onclick = ()=>{
+    const name = modal.querySelector('#newName').value.trim();
+    const cat = modal.querySelector('#newCategory').value.trim() || 'Khác';
+    const price = Number(modal.querySelector('#newPrice').value) || 0;
+    if(!name || price<=0){ error('Nhập tên và giá >= 1 (đơn vị: nghìn)'); return; }
+    const item = {id: genId(), name, category:cat, price};
+    state.menu.push(item);
+    rebuildCategories();
+    saveAndRender();
+    modalRoot.innerHTML = '';
+    success('Đã thêm món mới.');
+  };
+}
+
+function openManageMenuModal(){
+  modalRoot.innerHTML = '';
+  const modal = document.createElement('div'); modal.className='modal';
+  modal.innerHTML = `<div class="box">
+    <h3>Quản lý Menu</h3>
+    <div style="max-height:320px;overflow:auto;border:1px solid #f0f0f0;padding:8px;border-radius:6px" id="manageList"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button class="btn ghost" id="closeBtn">Đóng</button>
+      <button class="btn primary" id="addBtn">+ Thêm món</button>
+    </div>
+  </div>`;
+  modalRoot.appendChild(modal);
+  modal.querySelector('#closeBtn').onclick = ()=> modalRoot.innerHTML = '';
+  modal.querySelector('#addBtn').onclick = ()=> openAddItemModal();
+
+  const list = modal.querySelector('#manageList');
+  function renderManageList(){
+    list.innerHTML = '';
+    state.menu.forEach(it=>{
+      const row = document.createElement('div');
+      row.style.display='flex';row.style.justifyContent='space-between';row.style.alignItems='center';
+      row.style.padding='6px';row.style.borderBottom='1px dashed #eee';
+      row.innerHTML = `<div><strong>${escapeHtml(it.name)}</strong> <div class="small">${escapeHtml(it.category)}</div></div>
+                       <div style="display:flex;gap:8px;align-items:center">
+                         <div class="small">${fmtVND(it.price)}</div>
+                         <button class="btn ghost btn-edit">Sửa</button>
+                         <button class="btn danger btn-del">Xóa</button>
+                       </div>`;
+      row.querySelector('.btn-del').onclick = ()=>{
+        if(confirm('Xóa món khỏi menu?')){ state.menu = state.menu.filter(x=>x.id!==it.id); rebuildCategories(); renderManageList(); renderAll(); saveAndRender(); success('Đã xóa món khỏi menu.'); }
+      };
+      row.querySelector('.btn-edit').onclick = ()=>{
+        const newName = prompt('Tên mới', it.name) || it.name;
+        const newCat = prompt('Danh mục', it.category) || it.category;
+        const newPrice = Number(prompt('Giá (nghìn)', it.price) || it.price);
+        it.name = newName; it.category = newCat; it.price = newPrice;
+        rebuildCategories(); renderManageList(); renderAll(); saveAndRender();
+        success('Cập nhật món thành công.');
+      };
+      list.appendChild(row);
+    });
+  }
+  renderManageList();
+}
+
+// Save and re-render
+function saveAndRender(){
+  if(state.storageEnabled) saveState(state);
+  renderAll();
+}
+
+// Toggle storage
+function toggleStorage(){
+  state.storageEnabled = !state.storageEnabled;
+  if(state.storageEnabled){
+    saveState(state);
+    success('Đã bật lưu trạng thái vào localStorage.');
+  } else {
+    localStorage.removeItem(STORAGE_KEY);
+    info('Đã tắt lưu trạng thái (localStorage bị xoá).');
+  }
+  renderTotalRevenue();
+}
+
+// Table notes actions
+function saveNoteForSelectedTable(){
+  if(!selectedTableId){ info('Vui lòng chọn bàn để lưu ghi chú.'); return; }
+  const tb = state.tables.find(t=>t.id===selectedTableId);
+  tb.note = tableNoteEl.value.trim();
+  saveAndRender();
+  // flash saved indicator
+  noteSavedIndicator.style.display = 'inline-flex';
+  setTimeout(()=>{ noteSavedIndicator.style.display = 'none'; }, 1800);
+  success(`Đã lưu ghi chú cho Bàn ${selectedTableId}.`);
+}
+function clearNoteForSelectedTable(){
+  if(!selectedTableId){ info('Vui lòng chọn bàn để xóa ghi chú.'); return; }
+  const tb = state.tables.find(t=>t.id===selectedTableId);
+  if(!tb.note) { tableNoteEl.value=''; updateNoteMeta(); return; }
+  if(confirm('Xóa ghi chú cho bàn này?')){ tb.note=''; tableNoteEl.value=''; saveAndRender(); success('Đã xóa ghi chú.'); }
+}
+
+// open modal for adding custom item to selected table
+function openAddCustomModal(){
+  if(!selectedTableId){ info('Chọn bàn trước.'); return; }
+  modalRoot.innerHTML = '';
+  const md = document.createElement('div'); md.className='modal';
+  md.innerHTML = `<div class="box">
+    <h3>Thêm món tuỳ ý cho Bàn ${selectedTableId}</h3>
+    <label>Tên món <input id="custName" /></label>
+    <label>Giá (nghìn) <input id="custPrice" type="number" /></label>
+    <label>Số lượng <input id="custQty" type="number" value="1" min="1" /></label>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button class="btn ghost" id="cCancel">Huỷ</button>
+      <button class="btn primary" id="cSave">Thêm</button>
+    </div>
+  </div>`;
+  modalRoot.appendChild(md);
+  md.querySelector('#cCancel').onclick = ()=> modalRoot.innerHTML='';
+  md.querySelector('#cSave').onclick = ()=>{
+    const name = md.querySelector('#custName').value.trim();
+    const price = Number(md.querySelector('#custPrice').value) || 0;
+    const qty = Number(md.querySelector('#custQty').value) || 1;
+    if(!name || price<=0){ error('Nhập tên và giá hợp lệ.'); return; }
+    addCustomItemToTable(selectedTableId, name, price, qty);
+    modalRoot.innerHTML = '';
+  };
+}
+
+// View full history modal for table
+function openHistoryModal(tb){
+  modalRoot.innerHTML='';
+  const md = document.createElement('div'); md.className='modal';
+  let html = `<div class="box"><h3>Lịch sử Bàn ${tb.id}</h3>`;
+  if(tb.history.length===0){ html += `<div class="small">Chưa có lịch sử</div>`; }
+  else{
+    html += `<div style="max-height:360px;overflow:auto">`;
+    tb.history.slice().reverse().forEach(h=>{
+      html += `<div style="padding:10px;border:1px solid #f0f0f0;border-radius:6px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between"><div><strong>${fmtVND(h.total)}</strong></div><div class="small">${new Date(h.timestamp).toLocaleString()}</div></div>
+        <div class="small" style="margin-top:6px">${h.items.map(it=>`${it.qty}x ${escapeHtml(it.name)}`).join(' • ')}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  html += `<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+    <button class="btn ghost" id="closeHis">Đóng</button>
+  </div></div>`;
+  md.innerHTML = html;
+  modalRoot.appendChild(md);
+  md.querySelector('#closeHis').onclick = ()=> modalRoot.innerHTML='';
+}
+
+// ======= Event bindings =======
+searchInput.addEventListener('input', e=>{
+  menuFilter = e.target.value;
+  renderMenu();
+});
+toggleStorageBtn.onclick = ()=>{ toggleStorage(); renderTotalRevenue(); };
+openAddItemBtn.onclick = ()=> openAddItemModal();
+openManageMenuBtn.onclick = ()=> openManageMenuModal();
+checkoutBtn.onclick = ()=> { if(selectedTableId) checkoutTable(selectedTableId); };
+clearOrderBtn.onclick = ()=> { if(selectedTableId) clearCurrentOrder(selectedTableId); };
+viewHistoryBtn.onclick = ()=> { if(selectedTableId) openHistoryModal(state.tables.find(t=>t.id===selectedTableId)); };
+addCustomToTableBtn.onclick = ()=> openAddCustomModal();
+saveNoteBtn.onclick = ()=> saveNoteForSelectedTable();
+clearNoteBtn.onclick = ()=> clearNoteForSelectedTable();
+
+tableNoteEl.addEventListener('input', ()=> updateNoteMeta());
+
+function updateNoteMeta(){
+  const len = (tableNoteEl.value || '').length;
+  noteCharCount.textContent = `${len} ký tự`;
+  // show unsaved state by briefly showing nothing or hiding saved indicator
+  noteSavedIndicator.style.display = 'none';
+}
+
+// keyboard quick-add: press number 1-9 to select table (also allow 0 for 10, etc)
+document.addEventListener('keydown', (e)=>{
+  if(e.key >= '1' && e.key <= '9'){ const num=Number(e.key); if(num<=17){ selectedTableId = num; renderAll(); } }
+  if(e.key === '0'){ selectedTableId = 10; renderAll(); }
+});
+
+// initial render
+renderAll();
+
+</script>
+</body>
+</html>
